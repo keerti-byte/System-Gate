@@ -1,0 +1,14 @@
+{
+  "name": "system-gate",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Block distracting sites and apps until your Google Tasks are done.",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

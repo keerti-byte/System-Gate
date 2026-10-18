@@ -1,0 +1,9 @@
+node_modules/
+src-tauri/target/
+src-tauri/gen/
+*.log
+.DS_Store
+src-tauri/.cargo/config.toml
+node_modules/
+src-tauri/target/
+src-tauri/.cargo/config.toml

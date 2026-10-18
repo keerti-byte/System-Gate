@@ -1,0 +1,7 @@
+# Developer one-time setup (see SETUP.md): copy this file to config.toml in this folder
+# and paste YOUR Google OAuth "Desktop app" credentials. config.toml is git-ignored.
+# They are compiled into the app, so the people you give it to only click "Sign in with Google".
+# Rebuild after changing them.
+[env]
+SYSTEM_GATE_GOOGLE_CLIENT_ID = "PASTE-CLIENT-ID.apps.googleusercontent.com"
+SYSTEM_GATE_GOOGLE_CLIENT_SECRET = "PASTE-CLIENT-SECRET"

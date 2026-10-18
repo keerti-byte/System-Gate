@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>System Gate</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-locked="false">
+  <!-- ambient layers (decorative) -->
+  <canvas id="bg" aria-hidden="true"></canvas>
+  <canvas id="burst" aria-hidden="true"></canvas>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <!-- boot sequence: plays the first time the window is seen -->
+  <div id="boot" class="boot" hidden aria-hidden="true"><pre id="boot-text"></pre></div>
+
+  <div id="toasts" aria-live="polite"></div>
+
+  <!-- SYSTEM EVOLUTION overlay (rank change) -->
+  <div id="evolution" class="evolution" hidden role="alert">
+    <div class="rail top"></div>
+    <div class="evo-box">
+      <div class="notif-head"><span class="icon-box" aria-hidden="true">!</span><h2 class="boxed">System evolution</h2></div>
+      <p id="evo-text" class="evo-text" data-text=""></p>
+      <p id="evo-sub" class="evo-sub"></p>
+    </div>
+    <div class="rail bottom"></div>
+  </div>
+
+  <main class="shell" id="shell">
+    <div class="rail top"></div>
+
+    <header class="topbar">
+      <div class="brand" aria-hidden="true">[ SYSTEM ]</div>
+      <nav class="tabs" role="tablist" aria-label="Sections">
+        <button role="tab" id="t-status" data-tab="status" aria-selected="true" aria-controls="tab-status">Status</button>
+        <button role="tab" id="t-schedule" data-tab="schedule" aria-selected="false" aria-controls="tab-schedule">Schedule</button>
+        <button role="tab" id="t-settings" data-tab="settings" aria-selected="false" aria-controls="tab-settings">System settings</button>
+      </nav>
+      <div class="hud">
+        <span id="account" class="chip" hidden></span>
+        <span id="os-tag" class="os-tag"></span>
+        <span id="clock" class="clock" aria-label="Current time">--:--:--</span>
+      </div>
+    </header>
+
+    <!-- ============ STATUS (dashboard) ============ -->
+    <section id="tab-status" class="tab" role="tabpanel" aria-labelledby="t-status">
+
+      <!-- Sign in (only while signed out) -->
+      <article id="signin" class="window signin" hidden>
+        <div class="notif-head"><span class="icon-box" aria-hidden="true">!</span><h2 class="boxed grow">Notification</h2></div>
+        <p class="signin-text">Link your Google account so the System can read your quests and check them off for you.</p>
+        <button class="btn primary big js-signin" type="button">Sign in with Google</button>
+        <p class="dim">One click. A browser tab opens, you approve Tasks and Calendar, and you are done.</p>
+      </article>
+
+      <!-- HERO: the Gate -->
+      <article class="window hero" id="hero">
+        <div class="hero-grid">
+          <div class="gauge-col">
+            <div class="gauge" aria-hidden="true">
+              <svg viewBox="0 0 120 120">
+                <circle class="g-ticks" cx="60" cy="60" r="57"/>
+                <circle class="g-track" cx="60" cy="60" r="48"/>
+                <circle class="g-fill" id="gf-quests" cx="60" cy="60" r="48"/>
+              </svg>
+              <div class="g-center"><b id="gv-quests">0/0</b><small>Quests</small></div>
+            </div>
+            <p class="g-note" id="gn-quests"></p>
+          </div>
+
+          <div class="gate-col">
+            <div class="gate-stage" id="gate-stage">
+              <svg id="gate-svg" class="gate-svg" viewBox="0 0 220 220" role="img" aria-label="The Gate">
+                <defs>
+                  <radialGradient id="g-core" cx="50%" cy="50%" r="50%">
+                    <stop offset="0" class="stop-a"/>
+                    <stop offset="1" class="stop-b"/>
+                  </radialGradient>
+                  <linearGradient id="g-door" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0" stop-color="#0a1426"/>
+                    <stop offset="1" stop-color="#050a15"/>
+                  </linearGradient>
+                  <clipPath id="g-portal"><path d="M66 176 V96 A44 44 0 0 1 154 96 V176 Z"/></clipPath>
+                </defs>
+
+                <circle class="g-halo" cx="110" cy="110" r="64" fill="url(#g-core)"/>
+                <g class="spin slow"><circle class="g-ring dots" cx="110" cy="110" r="104"/></g>
+                <g class="spin rev"><circle class="g-ring dash" cx="110" cy="110" r="94"/></g>
+                <g class="spin med"><polygon class="g-ring hex" points="110,28 181,69 181,151 110,192 39,151 39,69"/></g>
+
+                <g clip-path="url(#g-portal)">
+                  <rect class="g-light" x="66" y="52" width="88" height="124" fill="url(#g-core)"/>
+                  <g class="g-beams">
+                    <polygon points="110,176 96,52 124,52"/>
+                    <polygon points="110,176 70,70 84,60"/>
+                    <polygon points="110,176 150,70 136,60"/>
+                  </g>
+                  <g class="door l"><rect x="66" y="52" width="44.5" height="124" fill="url(#g-door)"/><path d="M80 66 V162 M96 62 V166" class="g-grooves"/></g>
+                  <g class="door r"><rect x="109.5" y="52" width="44.5" height="124" fill="url(#g-door)"/><path d="M140 66 V162 M124 62 V166" class="g-grooves"/></g>
+                </g>
+                <path class="g-frame" d="M66 176 V96 A44 44 0 0 1 154 96 V176"/>
+                <path class="g-chain" d="M58 78 L162 170 M162 78 L58 170"/>
+                <g class="g-lock">
+                  <path class="shackle" d="M99 118 V108 A11 11 0 0 1 121 108 V118"/>
+                  <rect class="body" x="92" y="116" width="36" height="28" rx="3"/>
+                  <circle class="keyhole" cx="110" cy="128" r="3.4"/>
+                </g>
+              </svg>
+            </div>
+            <p id="gate-state" class="gate-state">Gate open</p>
+            <p id="gate-sub" class="gate-sub"></p>
+            <p id="next-up" class="next-up"></p>
+          </div>
+
+          <div class="gauge-col">
+            <div class="gauge" aria-hidden="true">
+              <svg viewBox="0 0 120 120">
+                <circle class="g-ticks" cx="60" cy="60" r="57"/>
+                <circle class="g-track" cx="60" cy="60" r="48"/>
+                <circle class="g-fill" id="gf-time" cx="60" cy="60" r="48"/>
+              </svg>
+              <div class="g-center"><b id="gv-time">--</b><small id="gl-time">Next change</small></div>
+            </div>
+            <p class="g-note" id="gn-time"></p>
+          </div>
+        </div>
+
+        <ul class="locks">
+          <li><span class="lock-tag" id="gate-tag">Open</span><span id="why"></span></li>
+        </ul>
+        <div class="hero-foot">
+          <button id="btn-refresh" class="btn" type="button">Check now</button>
+          <span id="last-check" class="dim"></span>
+        </div>
+        <p id="status-error" class="error" role="alert" hidden></p>
+      </article>
+
+      <!-- FOCUS TIMER (Pomodoro) -->
+      <article class="window timer-card" id="timer-card">
+        <div class="timer-ring">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="g-ticks" cx="60" cy="60" r="57"/>
+            <circle class="g-track" cx="60" cy="60" r="48"/>
+            <circle class="g-fill" id="gf-timer" cx="60" cy="60" r="48"/>
+          </svg>
+          <div class="g-center"><b id="timer-clock">25:00</b><small id="timer-phase">Ready</small></div>
+        </div>
+        <div class="timer-main">
+          <h2 class="boxed">Focus timer</h2>
+          <p id="timer-quest" class="timer-quest"></p>
+          <p id="timer-stats" class="dim"></p>
+          <div class="actions">
+            <button id="btn-timer" class="btn primary" type="button">Start focus</button>
+          </div>
+          <p class="hint">Pomodoro: focus, then a short break (a longer one every few sessions). Press the play button on a quest to start it: a quest only counts as <strong>in progress</strong> once you have used the timer on it, and finishing with the timer earns full EXP.</p>
+        </div>
+      </article>
+
+      <div class="mid-grid">
+        <!-- QUEST INFO -->
+        <article class="window quest-window">
+          <div class="notif-head">
+            <span class="icon-box" aria-hidden="true">!</span>
+            <h2 class="boxed grow">Quest info <span id="quest-badge" class="badge-count" hidden></span></h2>
+          </div>
+          <p id="quest-intro" class="bracket"></p>
+          <h3 class="goal">Goal</h3>
+          <ul id="quests" class="goals"></ul>
+          <div id="quests-empty" class="all-clear" hidden>
+            <svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="23"/><path d="M15 27 l8 8 l15 -17"/></svg>
+            <p id="quests-empty-text" class="bracket"></p>
+          </div>
+          <details id="moved-box" class="moved-box" hidden>
+            <summary id="moved-sum">Rescheduled</summary>
+            <ul id="moved-list" class="moved-list"></ul>
+          </details>
+          <p class="warning" id="quest-warning">Warning: failure to complete the daily quest will result in an appropriate <strong>penalty</strong>.</p>
+        </article>
+
+        <!-- STATUS -->
+        <article class="window status-window">
+          <h2 class="boxed center">Status</h2>
+
+          <div class="id-row">
+            <div class="lvl-ring">
+              <svg viewBox="0 0 140 140" aria-hidden="true">
+                <circle class="g-ticks" cx="70" cy="70" r="67"/>
+                <circle class="g-track" cx="70" cy="70" r="58"/>
+                <circle class="g-fill" id="gf-exp" cx="70" cy="70" r="58"/>
+              </svg>
+              <div class="g-center"><b id="level" class="level-num">1</b><small>Level</small></div>
+            </div>
+            <div class="ident">
+              <div class="rank-badge" id="rank-badge" aria-hidden="true"><span id="rank-letter">E</span></div>
+              <dl>
+                <div><dt>Rank</dt><dd id="rank">E-Rank</dd></div>
+                <div><dt>Title</dt><dd id="rank-title">Awakened</dd></div>
+                <div><dt>EXP</dt><dd id="exp-text">0 / 400</dd></div>
+              </dl>
+            </div>
+          </div>
+
+          <div class="attr-block">
+            <svg class="radar" viewBox="0 0 180 180" aria-hidden="true">
+              <g class="radar-grid">
+                <polygon points="90,26 154,90 90,154 26,90"/>
+                <polygon points="90,47 133,90 90,133 47,90"/>
+                <polygon points="90,68 112,90 90,112 68,90"/>
+                <path d="M90 26 V154 M26 90 H154"/>
+              </g>
+              <polygon id="radar-poly" class="radar-poly" points="90,90 90,90 90,90 90,90"/>
+              <text x="90" y="16" text-anchor="middle">HP</text>
+              <text x="168" y="94" text-anchor="middle">MP</text>
+              <text x="90" y="174" text-anchor="middle">AGI</text>
+              <text x="12" y="94" text-anchor="middle">STR</text>
+            </svg>
+            <ul id="bars" class="stats"></ul>
+          </div>
+        </article>
+      </div>
+
+      <!-- PENALTY ZONE -->
+      <article class="window penalty" id="penalty">
+        <div class="hazard" aria-hidden="true"></div>
+        <header class="penalty-head">
+          <div class="notif-head"><span class="icon-box" aria-hidden="true">!</span><h2 class="boxed grow">Penalty zone</h2></div>
+          <span id="penalty-chip" class="state-chip">Standby</span>
+        </header>
+        <p id="penalty-copy" class="penalty-copy"></p>
+        <ul id="penalty-tiles" class="tiles"></ul>
+        <div class="hazard" aria-hidden="true"></div>
+      </article>
+    </section>
+
+    <!-- ============ SCHEDULE ============ -->
+    <section id="tab-schedule" class="tab" role="tabpanel" aria-labelledby="t-schedule" hidden>
+      <article class="window">
+        <h2 class="boxed">Daily schedule</h2>
+        <p id="schedule-sum" class="gate-sub"></p>
+        <p id="schedule-note" class="dim" hidden></p>
+        <ol id="timeline" class="timeline"></ol>
+        <p id="schedule-empty" class="dim" hidden></p>
+      </article>
+    </section>
+
+    <!-- ============ SETTINGS ============ -->
+    <section id="tab-settings" class="tab settings-grid" role="tabpanel" aria-labelledby="t-settings" hidden>
+      <p id="settings-lock" class="notice" hidden>Settings are sealed while the Gate is active.</p>
+
+      <article class="window">
+        <h2 class="boxed">Sealed sites</h2>
+        <p class="hint">Domains that resolve to 127.0.0.1 while the Gate is sealed. <code>www.</code> variants are added automatically.</p>
+        <div class="add-row">
+          <input id="in-domain" type="text" placeholder="youtube.com" autocomplete="off" aria-label="Add a site">
+          <button id="add-domain" class="btn" type="button">Add site</button>
+        </div>
+        <ul id="domain-chips" class="chips"></ul>
+      </article>
+
+      <article class="window">
+        <h2 class="boxed">Sealed apps</h2>
+        <p class="hint">Executable name (<code>helium</code>, <code>Helium</code> on macOS) or a full path. Windows cuts the app's network access; Linux and macOS stop it from launching.</p>
+        <div class="add-row">
+          <input id="in-app" type="text" placeholder="helium" autocomplete="off" aria-label="Add an app">
+          <button id="add-app" class="btn" type="button">Add app</button>
+        </div>
+        <ul id="app-chips" class="chips"></ul>
+      </article>
+
+      <article class="window">
+        <h2 class="boxed">Quest source</h2>
+        <label class="field">
+          <span>Google Tasks list id</span>
+          <input id="in-list" type="text" autocomplete="off">
+          <small>Use <code>@default</code> for your main list. Ticking a quest here also ticks it in Google Tasks. Calendar events are never ticked.</small>
+        </label>
+        <label class="field">
+          <span>Check every (seconds)</span>
+          <input id="in-poll" type="number" min="15" max="3600">
+        </label>
+      </article>
+
+      <article class="window">
+        <h2 class="boxed">Day plan &amp; focus</h2>
+        <div class="field">
+          <span>Unplanned tasks lock the Gate after</span>
+          <div id="in-lockfrom" class="time12"></div>
+          <small>Tasks without a time slot stay out of your way until this time. Give a task a slot (the schedule button on it) to be locked only during it.</small>
+        </div>
+        <label class="field">
+          <span>Minutes to reschedule a missed quest before it moves to your next holiday</span>
+          <input id="in-grace" type="number" min="1" max="240">
+        </label>
+        <div class="field-row">
+          <label class="field"><span>Focus (min)</span><input id="in-focus" type="number" min="1" max="120"></label>
+          <label class="field"><span>Short break</span><input id="in-short" type="number" min="1" max="60"></label>
+          <label class="field"><span>Long break</span><input id="in-long" type="number" min="1" max="120"></label>
+          <label class="field"><span>Long every</span><input id="in-every" type="number" min="2" max="12"></label>
+        </div>
+      </article>
+
+      <article class="window">
+        <h2 class="boxed">Alerts &amp; sound</h2>
+        <label class="field check always"><input id="in-notif" type="checkbox"><span>Desktop notifications (block starting, Gate sealed or open, timer, level-ups)</span></label>
+        <label class="field check always"><input id="in-sound" type="checkbox"><span>Sound effects</span></label>
+        <label class="field always"><span>Volume</span><input id="in-vol" type="range" min="0" max="100" step="5"></label>
+        <div class="actions"><button id="btn-test-sound" class="btn always" type="button">Play a sound</button></div>
+      </article>
+
+      <article class="window">
+        <h2 class="boxed">Google account</h2>
+        <p id="auth-state" class="dim"></p>
+        <div class="actions">
+          <button class="btn primary js-signin" type="button">Sign in with Google</button>
+          <button id="btn-logout" class="btn ghost" type="button">Disconnect</button>
+        </div>
+        <details class="advanced">
+          <summary>Advanced: use my own Google credentials</summary>
+          <p class="hint">Leave empty to use the credentials built into this app. Only needed if you made your own Google Cloud OAuth client.</p>
+          <label class="field">
+            <span>OAuth client ID</span>
+            <input id="in-cid" type="text" autocomplete="off" spellcheck="false">
+          </label>
+          <label class="field">
+            <span>OAuth client secret</span>
+            <input id="in-secret" type="password" autocomplete="off" spellcheck="false">
+          </label>
+        </details>
+      </article>
+
+      <div class="save-row">
+        <button id="btn-save" class="btn primary" type="button">Save settings</button>
+      </div>
+
+      <article class="window danger-window">
+        <h2 class="boxed">Emergency release</h2>
+        <p class="hint">Breaks the seal without finishing your quests and keeps the Gate open until midnight. Type <strong>I SURRENDER</strong> to confirm.</p>
+        <div class="add-row">
+          <input id="in-surrender" type="text" autocomplete="off" aria-label="Confirmation phrase">
+          <button id="btn-surrender" class="btn danger" type="button">Release the Gate</button>
+        </div>
+      </article>
+    </section>
+
+    <div class="rail bottom"></div>
+  </main>
+
+  <!-- RESCHEDULE dialog -->
+  <div id="resched" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="rs-title">
+    <div class="modal-box window">
+      <h2 class="boxed" id="rs-title">Reschedule</h2>
+      <p id="rs-quest" class="bracket"></p>
+      <div class="rs-quick">
+        <button id="rs-holiday" class="btn primary" type="button"></button>
+        <button id="rs-tomorrow" class="btn" type="button">Tomorrow</button>
+      </div>
+      <div class="rs-form">
+        <label class="field"><span>Date</span><input id="rs-date" type="date"></label>
+        <div class="field"><span>Start time (optional)</span><div id="rs-time" class="time12"></div></div>
+        <label class="field"><span>Length (min)</span><input id="rs-dur" type="number" min="5" max="720"></label>
+      </div>
+      <p class="hint">With a start time the quest becomes a block that seals the Gate while it is on. Without one it is just planned for that day. Your Google Calendar is not changed.</p>
+      <p id="rs-error" class="error" role="alert" hidden></p>
+      <div class="actions">
+        <button id="rs-go" class="btn primary" type="button">Move it</button>
+        <button id="rs-cancel" class="btn ghost" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="sounds.js"></script>
+  <script src="fx.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
